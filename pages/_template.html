@@ -1,0 +1,37 @@
+<!doctype html>
+<!--
+  새 기능 초안 템플릿
+  1) 이 파일을 복사해 pages/기능명.html 로 저장 (예: pages/login.html)
+  2) <title>, <h1>, initPage('키') 수정
+  3) assets/js/common.js 의 MENU 배열에 { key, label, href } 추가
+  4) API 호출은 api.get / api.post 사용 → 하단 로그에서 확인
+-->
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>새 기능 초안</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body>
+  <main>
+    <h1>새 기능 초안</h1>
+    <p class="desc">기능 설명 / 관련 요구사항 ID / 담당자를 적어두세요.</p>
+
+    <section class="card">
+      <h2>화면 영역</h2>
+      <div id="content"><div class="state">여기에 화면을 구성하세요.</div></div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initPage, toast, esc } from '../assets/js/common.js';
+    import { api } from '../assets/js/api.js';
+    initPage('template');
+
+    // 예시: API 호출
+    // const list = await api.get('/todos?userId=1');
+    // document.getElementById('content').innerHTML = list.map(t => `<div>${esc(t.title)}</div>`).join('');
+  </script>
+</body>
+</html>

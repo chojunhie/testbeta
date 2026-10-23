@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>세팅 확인</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body>
+  <main>
+    <h1>세팅 확인</h1>
+    <p class="desc">이 페이지가 열리고 아래 항목이 모두 ✅ 이면 초기 세팅이 끝난 것입니다.</p>
+
+    <div id="summary" class="summary pending">점검 중…</div>
+
+    <section class="card">
+      <div class="toolbar"><button class="btn" id="rerun">다시 점검</button><span class="muted" id="envInfo"></span></div>
+      <ul class="checks" id="checks"></ul>
+    </section>
+  </main>
+
+  <!-- 모듈 로드 실패(file:// 로 연 경우) 대비용 일반 스크립트 -->
+  <script>
+    window.__moduleLoaded = false;
+    setTimeout(function () {
+      if (window.__moduleLoaded) return;
+      var s = document.getElementById('summary');
+      s.className = 'summary fail';
+      s.innerHTML = '❌ JS 모듈이 로드되지 않았습니다. 파일을 더블클릭(file://)으로 연 것 같습니다.<br>' +
+        'VS Code의 <b>Live Server(Go Live)</b> 또는 <code>npx serve .</code> 로 실행한 뒤 http:// 주소로 접속하세요.';
+    }, 1500);
+  </script>
+
+  <script type="module">
+    import { initPage } from '../assets/js/common.js';
+    import { CONFIG, MOCK_BASE_URL, ROOT_URL, getApiMode } from '../assets/js/config.js';
+    window.__moduleLoaded = true;
+    initPage('setup', { apiLog: false });
+
+    const host = location.hostname;
+    const env = location.protocol === 'file:' ? 'file' :
+      /^(localhost|127\.0\.0\.1|0\.0\.0\.0)$/.test(host) ? '로컬 개발 서버' :
+      host.endsWith('github.io') ? 'GitHub Pages' : '기타 서버';
+    document.getElementById('envInfo').textContent = `환경: ${env} · ${location.origin} · API 모드 ${getApiMode().toUpperCase()}`;
+
+    const timed = async (fn) => { const t = performance.now(); const r = await fn(); return { ...r, ms: Math.round(performance.now() - t) }; };
+    const withTimeout = (p, ms) => Promise.race([p, new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms))]);
+
+    const CHECKS = [
+      {
+        title: '1. 로컬 웹서버로 실행',
+        run: async () => location.protocol.startsWith('http')
+          ? { ok: true, detail: `${location.protocol}//${location.host} 에서 실행 중 (${env})` }
+          : { ok: false, detail: 'file:// 로 열려 있습니다.', hint: 'VS Code → Live Server 확장 설치 → 우측 하단 "Go Live" 클릭' },
+      },
+      {
+        title: '2. 공통 CSS 로드',
+        run: async () => getComputedStyle(document.documentElement).getPropertyValue('--css-loaded').trim() === '1'
+          ? { ok: true, detail: 'assets/css/common.css 적용됨' }
+          : { ok: false, detail: 'CSS 변수가 없습니다.', hint: '&lt;link href="../assets/css/common.css"&gt; 경로를 확인하세요.' },
+      },
+      {
+        title: '3. JS 모듈 / 설정 로드',
+        run: async () => ({ ok: true, detail: `config.js → APP_NAME="${CONFIG.APP_NAME}", API_BASE_URL=${CONFIG.API_BASE_URL}` }),
+      },
+      {
+        title: '4. 목업(mock) 데이터 로드',
+        run: async () => {
+          try {
+            const res = await withTimeout(fetch(MOCK_BASE_URL + 'users.json'), 5000);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return { ok: Array.isArray(data), detail: `mock/users.json — ${data.length}건` };
+          } catch (e) {
+            return { ok: false, detail: `mock/users.json 로드 실패 (${e.message})`, hint: 'mock 폴더가 프로젝트 루트에 있는지, 웹서버로 실행 중인지 확인하세요.' };
+          }
+        },
+      },
+      {
+        title: '5. 외부 API 호출 (CORS 포함)',
+        run: async () => {
+          const url = CONFIG.API_BASE_URL.replace(/\/$/, '') + '/users/1';
+          try {
+            const res = await withTimeout(fetch(url), CONFIG.TIMEOUT_MS);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            await res.json();
+            return { ok: true, detail: `GET ${url} → ${res.status}` };
+          } catch (e) {
+            return {
+              ok: false, detail: `GET ${url} 실패 (${e.message === 'timeout' ? '타임아웃' : '네트워크 오류 또는 CORS 차단'})`,
+              hint: '사내망/방화벽 또는 API 서버의 CORS 설정을 확인하세요. 당장은 상단 API 모드를 MOCK 으로 바꿔 화면 작업을 계속할 수 있습니다.',
+            };
+          }
+        },
+      },
+      {
+        title: '6. 브라우저 저장소 (API 모드 기억용)',
+        run: async () => {
+          try { localStorage.setItem('__t', '1'); localStorage.removeItem('__t'); return { ok: true, detail: 'localStorage 사용 가능' }; }
+          catch { return { ok: 'warn', detail: 'localStorage 사용 불가 (시크릿 모드 등). 모드 전환이 기억되지 않을 뿐 동작에는 문제없습니다.' }; }
+        },
+      },
+      {
+        title: '7. 배포 경로 (GitHub Pages 대비)',
+        run: async () => ({ ok: true, detail: `프로젝트 루트: ${ROOT_URL} — 모든 경로가 상대경로라 하위경로(/repo명/)에서도 동작합니다.` }),
+      },
+    ];
+
+    async function runAll() {
+      const list = document.getElementById('checks');
+      const summary = document.getElementById('summary');
+      summary.className = 'summary pending'; summary.textContent = '점검 중…';
+      list.innerHTML = CHECKS.map((c, i) => `<li id="c${i}"><span class="icon"><span class="spinner"></span></span><div><div class="title">${c.title}</div><div class="detail">확인 중…</div></div><span></span></li>`).join('');
+
+      const results = await Promise.all(CHECKS.map(async (c, i) => {
+        const r = await timed(c.run);
+        const li = document.getElementById('c' + i);
+        const icon = r.ok === true ? '✅' : r.ok === 'warn' ? '⚠️' : '❌';
+        li.innerHTML = `<span class="icon">${icon}</span>
+          <div><div class="title">${c.title}</div><div class="detail">${r.detail}</div>${r.hint ? `<div class="hint">💡 ${r.hint}</div>` : ''}</div>
+          <span class="muted">${r.ms}ms</span>`;
+        return r.ok;
+      }));
+
+      const fails = results.filter((r) => r === false).length;
+      summary.className = 'summary ' + (fails ? 'fail' : 'ok');
+      summary.textContent = fails ? `❌ ${fails}개 항목을 확인해 주세요.` : '✅ 세팅 완료! 이제 기능 초안을 만들 수 있습니다.';
+    }
+
+    document.getElementById('rerun').addEventListener('click', runAll);
+    runAll();
+  </script>
+</body>
+</html>

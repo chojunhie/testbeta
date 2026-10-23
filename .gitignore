@@ -1,0 +1,13 @@
+# OS / 에디터
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+
+# 의존성 / 빌드 (나중에 npm 도입 시)
+node_modules/
+dist/
+
+# 로컬 비밀값 — 실제 토큰은 절대 커밋하지 마세요
+.env
+*.local.js

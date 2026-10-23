@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>API 연동 샘플</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+</head>
+<body>
+  <main>
+    <h1>API 연동 샘플</h1>
+    <p class="desc">목록 조회 → 상세/연관 데이터 조회 → 등록(POST) 흐름 예시입니다. 하단 <b>API 로그</b>에서 요청·응답을 확인하세요.</p>
+
+    <section class="card" style="margin-bottom:16px">
+      <div class="toolbar">
+        <h2 style="margin:0;flex:1">① 사용자 목록 <span class="muted">GET /users</span></h2>
+        <input id="keyword" placeholder="이름·이메일 검색" style="max-width:220px">
+        <button class="btn" id="reload">새로고침</button>
+      </div>
+      <div id="userList" class="table-wrap"></div>
+    </section>
+
+    <div class="cols">
+      <section class="card">
+        <h2>② 상세 + 게시글 <span class="muted">GET /users/:id, GET /posts?userId=</span></h2>
+        <div id="detail"><div class="state">목록에서 사용자를 선택하세요.</div></div>
+      </section>
+
+      <section class="card">
+        <h2>③ 게시글 등록 <span class="muted">POST /posts</span></h2>
+        <form id="postForm">
+          <label class="field">작성자
+            <select name="userId" required><option value="">사용자 선택</option></select>
+          </label>
+          <label class="field">제목 <input name="title" required maxlength="100" placeholder="제목을 입력하세요"></label>
+          <label class="field">내용 <textarea name="body" required placeholder="내용을 입력하세요"></textarea></label>
+          <button class="btn primary" type="submit">등록</button>
+          <span class="muted" style="margin-left:8px">※ 테스트 API라 실제 저장되지 않고 응답만 돌아옵니다.</span>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <script type="module">
+    import { initPage, toast, esc } from '../assets/js/common.js';
+    import { api } from '../assets/js/api.js';
+    initPage('api');
+
+    const $ = (s) => document.querySelector(s);
+    const loading = (msg = '불러오는 중…') => `<div class="state"><span class="spinner"></span>${msg}</div>`;
+    const errorBox = (e) => `<div class="state error">⚠️ ${esc(e.message)}${e.status ? ` (status ${e.status})` : ''}</div>`;
+
+    let users = [];
+    let selectedId = null;
+
+    // ① 목록 조회
+    async function loadUsers() {
+      $('#userList').innerHTML = loading();
+      try {
+        users = await api.get('/users');
+        renderUsers();
+        $('#postForm [name=userId]').innerHTML = '<option value="">사용자 선택</option>' +
+          users.map((u) => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+      } catch (e) {
+        $('#userList').innerHTML = errorBox(e);
+      }
+    }
+
+    function renderUsers() {
+      const kw = $('#keyword').value.trim().toLowerCase();
+      const rows = users.filter((u) => !kw || u.name.toLowerCase().includes(kw) || u.email.toLowerCase().includes(kw));
+      if (!rows.length) { $('#userList').innerHTML = '<div class="state">데이터가 없습니다.</div>'; return; }
+      $('#userList').innerHTML = `<table>
+        <thead><tr><th>ID</th><th>이름</th><th>이메일</th><th>회사</th><th>도시</th></tr></thead>
+        <tbody>${rows.map((u) => `<tr data-id="${u.id}" class="${u.id === selectedId ? 'selected' : ''}">
+          <td>${u.id}</td><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${esc(u.company?.name)}</td><td>${esc(u.address?.city)}</td></tr>`).join('')}
+        </tbody></table>`;
+    }
+
+    // ② 상세 + 연관 데이터 (병렬 호출)
+    async function loadDetail(id) {
+      selectedId = id; renderUsers();
+      $('#detail').innerHTML = loading();
+      try {
+        const [user, posts] = await Promise.all([api.get(`/users/${id}`), api.get(`/posts?userId=${id}`)]);
+        $('#detail').innerHTML = `
+          <p style="margin:0 0 4px"><b>${esc(user.name)}</b> <span class="muted">@${esc(user.username)}</span></p>
+          <p class="muted" style="margin:0 0 12px">${esc(user.email)} · ${esc(user.phone)}</p>
+          <div class="muted" style="margin-bottom:6px">게시글 ${posts.length}건</div>
+          <ol class="steps">${posts.slice(0, 5).map((p) => `<li>${esc(p.title)}</li>`).join('') || '<li>게시글 없음</li>'}</ol>`;
+      } catch (e) {
+        $('#detail').innerHTML = errorBox(e);
+      }
+    }
+
+    // ③ 등록
+    $('#postForm').addEventListener('submit', async (ev) => {
+      ev.preventDefault();
+      const form = ev.currentTarget;
+      const btn = form.querySelector('button[type=submit]');
+      const payload = Object.fromEntries(new FormData(form));
+      payload.userId = Number(payload.userId);
+      btn.disabled = true; btn.textContent = '등록 중…';
+      try {
+        const created = await api.post('/posts', payload);
+        toast(`등록 완료 (id: ${created.id})`, 'success');
+        form.reset();
+      } catch (e) {
+        toast(`등록 실패: ${e.message}`, 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = '등록';
+      }
+    });
+
+    $('#userList').addEventListener('click', (e) => {
+      const tr = e.target.closest('tr[data-id]');
+      if (tr) loadDetail(Number(tr.dataset.id));
+    });
+    $('#keyword').addEventListener('input', renderUsers);
+    $('#reload').addEventListener('click', loadUsers);
+    loadUsers();
+  </script>
+</body>
+</html>

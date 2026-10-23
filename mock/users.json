@@ -1,0 +1,67 @@
+[
+  {
+    "id": 1,
+    "name": "김민준",
+    "username": "minjun",
+    "email": "minjun@example.com",
+    "phone": "010-1234-1000",
+    "address": {
+      "city": "Seoul"
+    },
+    "company": {
+      "name": "한빛소프트"
+    }
+  },
+  {
+    "id": 2,
+    "name": "이서연",
+    "username": "seoyeon",
+    "email": "seoyeon@example.com",
+    "phone": "010-1234-1001",
+    "address": {
+      "city": "Busan"
+    },
+    "company": {
+      "name": "누리테크"
+    }
+  },
+  {
+    "id": 3,
+    "name": "박지호",
+    "username": "jiho",
+    "email": "jiho@example.com",
+    "phone": "010-1234-1002",
+    "address": {
+      "city": "Incheon"
+    },
+    "company": {
+      "name": "다온시스템"
+    }
+  },
+  {
+    "id": 4,
+    "name": "최수아",
+    "username": "sua",
+    "email": "sua@example.com",
+    "phone": "010-1234-1003",
+    "address": {
+      "city": "Daegu"
+    },
+    "company": {
+      "name": "한빛소프트"
+    }
+  },
+  {
+    "id": 5,
+    "name": "정도윤",
+    "username": "doyun",
+    "email": "doyun@example.com",
+    "phone": "010-1234-1004",
+    "address": {
+      "city": "Daejeon"
+    },
+    "company": {
+      "name": "바른IT"
+    }
+  }
+]
