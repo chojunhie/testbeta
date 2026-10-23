@@ -1,0 +1,24 @@
+<!doctype html>
+<!--
+  DB 산출물 자동화 (초안)
+  - 좌측: 단계 메뉴 / 우측: 단계별 기능
+  - 로직: assets/js/dbdoc/*.js  (fields · importer · validate · docs · state · app)
+  - 엑셀 읽기/쓰기: ExcelJS (CDN)
+-->
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DB 산출물 자동화</title>
+  <link rel="stylesheet" href="../assets/css/common.css">
+  <link rel="stylesheet" href="../assets/css/dbdoc.css">
+  <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" defer></script>
+</head>
+<body class="dd-body">
+  <div class="dd-layout">
+    <aside class="dd-side" id="side"></aside>
+    <main class="dd-view" id="view"><div class="state"><span class="spinner"></span>불러오는 중…</div></main>
+  </div>
+  <script type="module" src="../assets/js/dbdoc/app.js"></script>
+</body>
+</html>

@@ -30,6 +30,7 @@
           <table>
             <thead><tr><th>기능</th><th>상태</th><th>담당</th></tr></thead>
             <tbody>
+              <tr onclick="location.href='pages/db-docs.html'"><td>DB 산출물 자동화 (컬럼·테이블 정의서)</td><td><span class="tag warn">초안</span></td><td>-</td></tr>
               <tr onclick="location.href='pages/api-sample.html'"><td>사용자 조회/게시글 등록 (샘플)</td><td><span class="tag ok">완료</span></td><td>-</td></tr>
               <tr><td>(예) 로그인</td><td><span class="tag warn">초안</span></td><td>-</td></tr>
             </tbody>
@@ -43,6 +44,7 @@
     import { initPage, MENU, esc } from './assets/js/common.js';
     initPage('home', { apiLog: false });
     const desc = {
+      dbdoc: 'DB 컬럼정보(엑셀) → 확정 → 테이블/컬럼 정의서 엑셀 생성 (단계별 진행)',
       setup: '로컬 서버·모듈·목업·외부 API 호출 등 세팅 상태를 자동 점검',
       api: '목록 조회, 상세 조회, 등록(POST) 등 API 연계 패턴 샘플',
       template: '새 기능 초안을 만들 때 복사해서 쓰는 빈 페이지',

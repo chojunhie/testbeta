@@ -75,6 +75,17 @@ git push -u origin feature/login      # 4. GitHub에서 PR → 리뷰 → main �
 
 ---
 
+## 기능 초안: DB 산출물 자동화 (`pages/db-docs.html`)
+좌측 단계 메뉴 → 우측 기능 영역 구성.
+1. 프로젝트 정보 → 2. 컬럼정보 가져오기(엑셀/CSV 업로드·붙여넣기·샘플, 헤더 자동 매핑) → 3. 검토·수정(그리드 편집, 자동 검증) → 4. 확정(버전·변경 이력) → 5. 산출물 양식(문서별 항목·순서·제목, 양식 JSON 공유) → 6. 산출물 생성(미리보기 + 엑셀 다운로드) → 7. DB 자동 생성(목업: `mock/db-columns.json`을 DB 조회 결과로 가정)
+
+- 코드: `assets/js/dbdoc/` — `fields.js`(항목·헤더 별칭) · `importer.js` · `validate.js` · `docs.js`(문서 모델·엑셀) · `state.js` · `app.js`(화면)
+- 엑셀 읽기/쓰기: ExcelJS (CDN)
+- 저장: 초안은 브라우저 localStorage — 개요 화면에서 백업(.json) 내보내기/가져오기
+- 사내 엑셀 헤더명이 다르면 `fields.js`의 `aliases`에 추가
+
+---
+
 ## 2. 폴더 구조
 ```
 proto-starter/

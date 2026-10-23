@@ -7,6 +7,7 @@ import { onApiLog } from './api.js';
 
 export const MENU = [
   { key: 'home', label: '홈', href: 'index.html' },
+  { key: 'dbdoc', label: 'DB 산출물', href: 'pages/db-docs.html' },
   { key: 'setup', label: '세팅 확인', href: 'pages/setup-check.html' },
   { key: 'api', label: 'API 연동 샘플', href: 'pages/api-sample.html' },
   { key: 'template', label: '새 기능 템플릿', href: 'pages/_template.html' },
